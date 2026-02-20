@@ -52,7 +52,7 @@ app.add_middleware(
 )
 
 # Environment Detection (Server vs Desktop)
-IS_SERVER = os.environ.get("RENDER") or os.environ.get("DYNO") or os.environ.get("SERVER_ENV")
+IS_SERVER = os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("RENDER") or os.environ.get("DYNO") or os.environ.get("SERVER_ENV")
 
 if IS_SERVER:
     DOWNLOADS_DIR = Path(tempfile.gettempdir()) / "avy_downloads"
@@ -62,6 +62,23 @@ else:
     logger.info(f"Running in DESKTOP mode. Downloads dir: {DOWNLOADS_DIR}")
 
 DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Restore cookies.txt from environment variable (for Railway/server deployment)
+# Set YOUTUBE_COOKIES env var in Railway with the base64-encoded cookies.txt content
+import base64
+cookies_b64 = os.environ.get("YOUTUBE_COOKIES")
+cookies_file = BASE_DIR / "cookies.txt"
+if cookies_b64 and not cookies_file.exists():
+    try:
+        decoded = base64.b64decode(cookies_b64)
+        cookies_file.write_bytes(decoded)
+        logger.info(f"Restored cookies.txt from YOUTUBE_COOKIES env var ({len(decoded)} bytes)")
+    except Exception as e:
+        logger.warning(f"Failed to decode YOUTUBE_COOKIES: {e}")
+elif cookies_file.exists():
+    logger.info(f"Using existing cookies.txt ({cookies_file.stat().st_size} bytes)")
+else:
+    logger.warning("No cookies.txt found and YOUTUBE_COOKIES env var not set. YouTube may show bot error.")
 
 # Mount Static Files
 from fastapi.staticfiles import StaticFiles
