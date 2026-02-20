@@ -13,8 +13,8 @@ import Contact from './pages/Contact';
 import type { VideoInfo } from './Types';
 import './index.css';
 
-const rawUrl = import.meta.env.VITE_API_URL || 'https://web-production-7877c.up.railway.app';
-const API_URL = rawUrl.replace(/\/$/, '');
+// Use relative URL so it works on both localhost AND Railway/production
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? '';
 
 function HomePage() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
