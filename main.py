@@ -120,27 +120,34 @@ def get_cookie_kwargs():
     return opts
 
 def get_browser_cookies():
-    """Returns the name of a browser that is likely to have cookies."""
-    # List of common browsers to try in order
+    """Returns the name of a browser that is likely to have cookies. Returns None if not found."""
+    import platform
     found_browsers = []
-    # Chrome
-    if os.path.exists(os.path.expandvars(r"%LocalAppData%\Google\Chrome\User Data")):
-        found_browsers.append("chrome")
-    # Edge
-    if os.path.exists(os.path.expandvars(r"%LocalAppData%\Microsoft\Edge\User Data")):
-        found_browsers.append("edge")
-    # Firefox
-    if os.path.exists(os.path.expandvars(r"%AppData%\Mozilla\Firefox\Profiles")):
-        found_browsers.append("firefox")
-    # Brave
-    if os.path.exists(os.path.expandvars(r"%LocalAppData%\BraveSoftware\Brave-Browser\User Data")):
-        found_browsers.append("brave")
+
+    if platform.system() == "Windows":
+        # Windows browser paths
+        if os.path.exists(os.path.expandvars(r"%LocalAppData%\Google\Chrome\User Data")):
+            found_browsers.append("chrome")
+        if os.path.exists(os.path.expandvars(r"%LocalAppData%\Microsoft\Edge\User Data")):
+            found_browsers.append("edge")
+        if os.path.exists(os.path.expandvars(r"%AppData%\Mozilla\Firefox\Profiles")):
+            found_browsers.append("firefox")
+        if os.path.exists(os.path.expandvars(r"%LocalAppData%\BraveSoftware\Brave-Browser\User Data")):
+            found_browsers.append("brave")
+    else:
+        # Linux/Mac browser paths
+        home = Path.home()
+        if (home / ".config/google-chrome").exists():
+            found_browsers.append("chrome")
+        if (home / ".config/chromium").exists():
+            found_browsers.append("chromium")
+        if (home / ".mozilla/firefox").exists():
+            found_browsers.append("firefox")
 
     if found_browsers:
-        # logger.info(f"Detected browsers for cookies: {found_browsers}")
-        return found_browsers[0] # Return the first one found
-    
-    return "chrome" # Default to chrome if nothing detected
+        return found_browsers[0]
+
+    return None  # No browser found — don't try browser cookies (e.g. on Railway server)
 
 def get_best_browser_for_cmd():
     return get_browser_cookies()
