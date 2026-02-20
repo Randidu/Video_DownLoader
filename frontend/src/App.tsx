@@ -1,21 +1,22 @@
 import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Preview from './components/Preview';
 import Features from './components/Features';
+import FAQ from './components/FAQ';
 import Footer from './components/Footer';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import AboutUs from './pages/AboutUs';
+import Contact from './pages/Contact';
 import type { VideoInfo } from './Types';
 import './index.css';
 
-// Determine API URL
-// Priority:
-// 1. VITE_API_URL (Set in Vercel for separate deployment)
-// 2. Window Origin (For monolithic deployment / Render)
-// 3. Localhost (For local dev)
 const rawUrl = import.meta.env.VITE_API_URL || 'https://web-production-7877c.up.railway.app';
 const API_URL = rawUrl.replace(/\/$/, '');
 
-function App() {
+function HomePage() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [searchedUrl, setSearchedUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,15 +32,12 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/video/info`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: url }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
       });
 
       if (!response.ok) {
         const text = await response.text();
-        // Try parsing JSON error
         try {
           const jsonError = JSON.parse(text);
           throw new Error(jsonError.detail || 'Failed to fetch video info');
@@ -51,7 +49,6 @@ function App() {
       const data = await response.json();
       if (data.success && data.data) {
         setVideoInfo(data.data);
-        // Scroll to preview
         setTimeout(() => {
           const preview = document.getElementById('previewSection');
           if (preview) preview.scrollIntoView({ behavior: 'smooth' });
@@ -59,9 +56,7 @@ function App() {
       } else {
         throw new Error('Invalid response from server');
       }
-
     } catch (err: any) {
-      console.error(err);
       setError(err.message || 'An error occurred while fetching video info');
     } finally {
       setIsLoading(false);
@@ -70,34 +65,16 @@ function App() {
 
   const handleDownload = (url: string, format: string, quality?: string) => {
     setIsDownloading(true);
-
-    // Construct Query URL
-    const params = new URLSearchParams({
-      url: url,
-      format: format
-    });
-
+    const params = new URLSearchParams({ url, format });
     let actualQuality = quality;
     if (actualQuality === 'audio') actualQuality = '';
-
-    if (actualQuality) {
-      params.append('quality', actualQuality);
-    }
-
-    const downloadUrl = `${API_URL}/video/download_link?${params.toString()}`;
-
-    // Trigger Download
-    window.location.href = downloadUrl;
-
-    // Reset UI after a delay
-    setTimeout(() => {
-      setIsDownloading(false);
-    }, 5000);
+    if (actualQuality) params.append('quality', actualQuality);
+    window.location.href = `${API_URL}/video/download_link?${params.toString()}`;
+    setTimeout(() => setIsDownloading(false), 5000);
   };
 
   return (
     <div className="app-container">
-      <Navbar />
       <Hero onFetch={handleFetch} isLoading={isLoading} error={error} />
       {videoInfo && (
         <Preview
@@ -108,8 +85,24 @@ function App() {
         />
       )}
       <Features />
-      <Footer />
+      <FAQ />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+      <Footer />
+    </Router>
   );
 }
 
