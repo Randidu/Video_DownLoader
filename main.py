@@ -151,6 +151,12 @@ def get_cookie_kwargs():
     # Always use tv/mweb player clients — these bypass bot detection and support cookies
     opts['extractor_args'] = {'youtube': {'player_client': ['tv', 'mweb']}}
 
+    # Add deno JS runtime if available (essential for signature decryption)
+    deno_path = get_deno_path()
+    if deno_path:
+        opts['js_runtimes'] = [f'deno:{deno_path}']
+        logger.info(f"Using deno JS runtime for decryption: {deno_path}")
+
     return opts
 
 def get_browser_cookies():
