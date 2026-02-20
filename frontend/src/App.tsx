@@ -8,9 +8,13 @@ import type { VideoInfo } from './Types';
 import './index.css';
 
 // Determine API URL
-const API_URL = import.meta.env.PROD
+// Priority:
+// 1. VITE_API_URL (Set in Vercel for separate deployment)
+// 2. Window Origin (For monolithic deployment / Render)
+// 3. Localhost (For local dev)
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD
   ? window.location.origin
-  : 'http://localhost:8000';
+  : 'http://localhost:8000');
 
 function App() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
