@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["python3"]
+
+[phases.install]
+cmds = ["python -m venv .venv", ". .venv/bin/activate", "pip install -r requirements_server.txt"]
+
+[start]
+cmd = "python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
