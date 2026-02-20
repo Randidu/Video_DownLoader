@@ -12,9 +12,7 @@ import './index.css';
 // 1. VITE_API_URL (Set in Vercel for separate deployment)
 // 2. Window Origin (For monolithic deployment / Render)
 // 3. Localhost (For local dev)
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD
-  ? window.location.origin
-  : 'http://localhost:8000');
+const API_URL = import.meta.env.VITE_API_URL || 'https://web-production-7877c.up.railway.app';
 
 function App() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
