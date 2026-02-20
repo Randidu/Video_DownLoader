@@ -2,7 +2,7 @@ services:
   - type: web
     name: video-downloader
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements_server.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: SERVER_ENV
