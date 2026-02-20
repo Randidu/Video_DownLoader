@@ -64,21 +64,38 @@ else:
 DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Restore cookies.txt from environment variable (for Railway/server deployment)
-# Set YOUTUBE_COOKIES env var in Railway with the base64-encoded cookies.txt content
 import base64
 cookies_b64 = os.environ.get("YOUTUBE_COOKIES")
 cookies_file = BASE_DIR / "cookies.txt"
-if cookies_b64 and not cookies_file.exists():
-    try:
-        decoded = base64.b64decode(cookies_b64)
-        cookies_file.write_bytes(decoded)
-        logger.info(f"Restored cookies.txt from YOUTUBE_COOKIES env var ({len(decoded)} bytes)")
-    except Exception as e:
-        logger.warning(f"Failed to decode YOUTUBE_COOKIES: {e}")
-elif cookies_file.exists():
-    logger.info(f"Using existing cookies.txt ({cookies_file.stat().st_size} bytes)")
-else:
-    logger.warning("No cookies.txt found and YOUTUBE_COOKIES env var not set. YouTube may show bot error.")
+
+def restore_cookies():
+    if cookies_b64:
+        try:
+            # Always try to restore/overwrite if env var is present to ensure latest cookies
+            decoded = base64.b64decode(cookies_b64.strip())
+            cookies_file.write_bytes(decoded)
+            logger.info(f"✅ Successfully restored cookies.txt from YOUTUBE_COOKIES ({len(decoded)} bytes)")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to decode YOUTUBE_COOKIES: {e}")
+    return False
+
+# Run restoration on startup
+cookies_restored = restore_cookies()
+
+@app.get("/debug/cookies")
+async def debug_cookies():
+    """Verify if cookies are active on the server."""
+    exists = cookies_file.exists()
+    size = cookies_file.stat().st_size if exists else 0
+    return {
+        "cookies_env_found": cookies_b64 is not None,
+        "cookies_file_exists": exists,
+        "cookies_file_size": size,
+        "cookies_restored_success": cookies_restored,
+        "is_server": IS_SERVER,
+        "base_dir": str(BASE_DIR)
+    }
 
 # Mount Static Files
 from fastapi.staticfiles import StaticFiles
