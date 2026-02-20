@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: video-downloader
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SERVER_ENV
+        value: "true"
+      - key: PYTHON_VERSION
+        value: 3.9.0
