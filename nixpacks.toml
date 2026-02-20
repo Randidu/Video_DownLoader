@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python3"]
+nixPkgs = ["python3", "deno", "ffmpeg"]
 
 [phases.install]
 cmds = ["python -m venv .venv", ". .venv/bin/activate", "pip install -r requirements_build.txt"]
