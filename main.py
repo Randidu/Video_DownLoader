@@ -16,7 +16,6 @@ import shutil
 import subprocess
 
 import sys
-import sys
 import tempfile
 from urllib.parse import quote
 
@@ -99,46 +98,62 @@ def is_youtube_url(url: str) -> bool:
     u = str(url).lower()
     return "youtube.com" in u or "youtu.be" in u
 
-# Browser detection for cookie extraction (to bypass YouTube bot detection)
-BROWSER_PATHS = {
-    "chrome": [
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-    ],
-    "edge": [
-        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-    ],
-    "firefox": [
-        r"C:\Program Files\Mozilla Firefox\firefox.exe",
-        r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
-    ],
-}
+def get_cookie_kwargs():
+    """Returns yt-dlp options for cookies (file or browser)."""
+    opts = {}
 
-def _find_installed_browser():
-    """Return the first installed browser name from BROWSER_PATHS, or None."""
-    for browser, paths in BROWSER_PATHS.items():
-        for p in paths:
-            if os.path.exists(p):
-                return browser
-    # Also try shutil.which as a fallback for PATH-based installs
-    for browser in ("chrome", "chromium", "msedge", "firefox"):
-        if shutil.which(browser):
-            return browser
-    return None
+    # 1. Try local cookies.txt first (Best for servers/persistent auth)
+    cookie_file = BASE_DIR / "cookies.txt"
+    if cookie_file.exists():
+        logger.info(f"Using cookie file: {cookie_file}")
+        opts['cookiefile'] = str(cookie_file)
+    else:
+        # 2. Try browser cookies (Best for local dev)
+        browser = get_browser_cookies()
+        if browser:
+            logger.info(f"Using cookies from browser: {browser}")
+            opts['cookiesfrombrowser'] = (browser,)
+
+    # Always use tv/mweb player clients — these bypass bot detection and support cookies
+    opts['extractor_args'] = {'youtube': {'player_client': ['tv', 'mweb']}}
+
+    return opts
 
 def get_browser_cookies():
-    """Return a tuple suitable for yt-dlp's 'cookiesfrombrowser' option, or None."""
-    browser = _find_installed_browser()
-    if browser:
-        logger.info(f"Using cookies from browser: {browser}")
-        return (browser,)   # yt-dlp expects a tuple: (browser_name,)
-    logger.warning("No supported browser found for cookie extraction.")
-    return None
+    """Returns the name of a browser that is likely to have cookies."""
+    # List of common browsers to try in order
+    found_browsers = []
+    # Chrome
+    if os.path.exists(os.path.expandvars(r"%LocalAppData%\Google\Chrome\User Data")):
+        found_browsers.append("chrome")
+    # Edge
+    if os.path.exists(os.path.expandvars(r"%LocalAppData%\Microsoft\Edge\User Data")):
+        found_browsers.append("edge")
+    # Firefox
+    if os.path.exists(os.path.expandvars(r"%AppData%\Mozilla\Firefox\Profiles")):
+        found_browsers.append("firefox")
+    # Brave
+    if os.path.exists(os.path.expandvars(r"%LocalAppData%\BraveSoftware\Brave-Browser\User Data")):
+        found_browsers.append("brave")
+
+    if found_browsers:
+        # logger.info(f"Detected browsers for cookies: {found_browsers}")
+        return found_browsers[0] # Return the first one found
+    
+    return "chrome" # Default to chrome if nothing detected
 
 def get_best_browser_for_cmd():
-    """Return browser name string for --cookies-from-browser CLI arg, or None."""
-    return _find_installed_browser()
+    return get_browser_cookies()
+
+def get_deno_path():
+    """Find the deno executable path."""
+    # Common install locations on Windows
+    deno_local = Path.home() / ".deno" / "bin" / "deno.exe"
+    if deno_local.exists():
+        return str(deno_local)
+    if shutil.which("deno"):
+        return shutil.which("deno")
+    return None
 
 @app.get("/")
 async def root():
@@ -187,12 +202,10 @@ async def get_video_info(video: VideoURL):
             'quiet': True,
             'no_warnings': True,
             'extract_flat': False,
-            'cookiesfrombrowser': get_browser_cookies(),
-            'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-            },
-            'extractor_retries': 5,
-            'sleep_interval_requests': 1,
+            **get_cookie_kwargs(),
+            'nocheckcertificate': True,
+            'ignoreerrors': False,
+            'socket_timeout': 30,
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             return ydl.extract_info(url_str, download=False)
@@ -246,10 +259,7 @@ async def download_link_get(url: str, background_tasks: BackgroundTasks, format:
             ydl_opts = {
                 'quiet': True, 
                 'no_warnings': True,
-                'cookiesfrombrowser': get_browser_cookies(),
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-                }
+                **get_cookie_kwargs(),
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url_str, download=False)
@@ -276,19 +286,30 @@ async def download_link_get(url: str, background_tasks: BackgroundTasks, format:
 
         # 2. Construct yt-dlp command for streaming to stdout
         # -o - : Output to stdout
-        cmd = ["yt-dlp", "--no-part", "--no-colors"]
+        cmd = ["yt-dlp", "--no-part", "--no-colors", "--no-check-certificate", "--quiet"]
 
-        # Anti-bot: pass cookies from browser
-        browser_name = get_best_browser_for_cmd()
-        if browser_name:
-            cmd.extend(["--cookies-from-browser", browser_name])
+        # Add deno JS runtime if available (required for modern YouTube extraction)
+        deno_path = get_deno_path()
+        if deno_path:
+            cmd.extend(["--js-runtimes", f"deno:{deno_path}"])
+            logger.info(f"Using deno JS runtime: {deno_path}")
+        else:
+            logger.warning("Deno JS runtime not found. YouTube may fail. Install from https://deno.land")
+
+        # Anti-bot: pass cookies
+        cookie_file = BASE_DIR / "cookies.txt"
+        if cookie_file.exists():
+             cmd.extend(["--cookies", str(cookie_file)])
+        else:
+            browser_name = get_best_browser_for_cmd()
+            if browser_name:
+                cmd.extend(["--cookies-from-browser", f"{browser_name}"])
         
-        # Anti-bot: realistic user agent
         cmd.extend([
-            "--user-agent",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-            "--extractor-retries", "5",
-            "--sleep-interval", "1",
+            "--socket-timeout", "30",
+            "--geo-bypass",
+            # Fix for SABR streaming 403 issue - use tv/mweb clients which support cookies
+            "--extractor-args", "youtube:player_client=tv,mweb"
         ])
         
         if ffmpeg_exe:
@@ -492,12 +513,9 @@ async def download_video(request: DownloadRequest):
                 'quiet': False,
                 'ffmpeg_location': ffmpeg_exe if ffmpeg_exe else None,
                 # Anti-bot options
-                'cookiesfrombrowser': get_browser_cookies(),
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-                },
-                'extractor_retries': 5,
-                'sleep_interval_requests': 1,
+                **get_cookie_kwargs(),
+                'nocheckcertificate': True,
+                'socket_timeout': 30,
             }
             
             # Simple configuration for robustness
