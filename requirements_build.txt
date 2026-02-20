@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+yt-dlp
+pytubefix
+requests
+aiofiles
+python-multipart
+python-dotenv
+jinja2
