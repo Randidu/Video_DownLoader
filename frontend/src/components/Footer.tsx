@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
                     <a href="#">Contact</a>
                 </div>
                 <p className="copyright">
-                    &copy; {new Date().getFullYear()} InfinityGrab. All rights reserved. Made with Randidu Damsith <i className="bi bi-heart-fill text-danger"></i>
+                    &copy; {new Date().getFullYear()} InfinityGrab. All rights reserved. Made with Randidu Damsith
                 </p>
             </div>
         </footer>

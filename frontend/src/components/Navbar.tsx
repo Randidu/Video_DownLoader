@@ -4,7 +4,10 @@ const Navbar: React.FC = () => {
     return (
         <nav className="navbar navbar-expand-lg navbar-dark sticky-top">
             <div className="container">
-                <a className="navbar-brand" href="#">InfinityGrab</a>
+                <a className="navbar-brand d-flex align-items-center" href="#">
+                    <img src="/logo.png" alt="InfinityGrab Logo" width="40" height="40" className="d-inline-block align-text-top me-2 rounded-circle" />
+                    InfinityGrab
+                </a>
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span className="navbar-toggler-icon"></span>
                 </button>

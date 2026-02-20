@@ -107,6 +107,35 @@ async def root():
         return {"error": "index.html not found. Please ensure it exists in the application directory."}
     return FileResponse(html_path)
 
+@app.get("/logo.png")
+async def get_logo():
+    path = BASE_DIR / "logo.png"
+    if path.exists():
+        return FileResponse(path)
+    return FileResponse(BASE_DIR / "assets" / "logo.png") # Fallback
+
+@app.get("/favicon.ico")
+async def get_favicon():
+    path = BASE_DIR / "favicon.ico"
+    if path.exists():
+        return FileResponse(path)
+    # Check if logo.png exists and serve it as fallback? 
+    # Or just return logo.png as favicon.ico content type?
+    # Better to just return logo.png if favicon.ico missing.
+    return await get_logo()
+
+@app.get("/manifest.json")
+async def get_manifest():
+    return FileResponse(BASE_DIR / "manifest.json")
+
+@app.get("/robots.txt")
+async def get_robots():
+    return FileResponse(BASE_DIR / "robots.txt")
+
+@app.get("/sitemap.xml")
+async def get_sitemap():
+    return FileResponse(BASE_DIR / "sitemap.xml")
+
 @app.post("/video/info")
 async def get_video_info(video: VideoURL):
     url_str = str(video.url)

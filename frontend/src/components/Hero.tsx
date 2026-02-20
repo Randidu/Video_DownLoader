@@ -24,8 +24,8 @@ const Hero: React.FC<HeroProps> = ({ onFetch, isLoading, error }) => {
     return (
         <section className="hero" id="home">
             <div className="container">
-                <h1>Download Videos From Any Platform</h1>
-                <p>YouTube, Facebook, Instagram, TikTok & more</p>
+                <h1>Best Free Video Downloader: YouTube, Facebook, TikTok</h1>
+                <p>Download Videos from YouTube, Facebook, Instagram, TikTok & more in HD/4K</p>
 
                 {/* URL Input */}
                 <div className="url-input-container">
