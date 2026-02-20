@@ -99,6 +99,47 @@ def is_youtube_url(url: str) -> bool:
     u = str(url).lower()
     return "youtube.com" in u or "youtu.be" in u
 
+# Browser detection for cookie extraction (to bypass YouTube bot detection)
+BROWSER_PATHS = {
+    "chrome": [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    ],
+    "edge": [
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+    ],
+    "firefox": [
+        r"C:\Program Files\Mozilla Firefox\firefox.exe",
+        r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
+    ],
+}
+
+def _find_installed_browser():
+    """Return the first installed browser name from BROWSER_PATHS, or None."""
+    for browser, paths in BROWSER_PATHS.items():
+        for p in paths:
+            if os.path.exists(p):
+                return browser
+    # Also try shutil.which as a fallback for PATH-based installs
+    for browser in ("chrome", "chromium", "msedge", "firefox"):
+        if shutil.which(browser):
+            return browser
+    return None
+
+def get_browser_cookies():
+    """Return a tuple suitable for yt-dlp's 'cookiesfrombrowser' option, or None."""
+    browser = _find_installed_browser()
+    if browser:
+        logger.info(f"Using cookies from browser: {browser}")
+        return (browser,)   # yt-dlp expects a tuple: (browser_name,)
+    logger.warning("No supported browser found for cookie extraction.")
+    return None
+
+def get_best_browser_for_cmd():
+    """Return browser name string for --cookies-from-browser CLI arg, or None."""
+    return _find_installed_browser()
+
 @app.get("/")
 async def root():
     html_path = BASE_DIR / "index.html"
@@ -142,7 +183,17 @@ async def get_video_info(video: VideoURL):
     
     # helper for yt-dlp info
     def get_info_ytdlp():
-        ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': False}
+        ydl_opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'extract_flat': False,
+            'cookiesfrombrowser': get_browser_cookies(),
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+            },
+            'extractor_retries': 5,
+            'sleep_interval_requests': 1,
+        }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             return ydl.extract_info(url_str, download=False)
 
@@ -192,7 +243,14 @@ async def download_link_get(url: str, background_tasks: BackgroundTasks, format:
 
         # 1. Get Metadata (Title/Filename/Size) quickly
         def get_meta():
-            ydl_opts = {'quiet': True, 'no_warnings': True}
+            ydl_opts = {
+                'quiet': True, 
+                'no_warnings': True,
+                'cookiesfrombrowser': get_browser_cookies(),
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+                }
+            }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url_str, download=False)
                 filename = ydl.prepare_filename(info)
@@ -219,6 +277,19 @@ async def download_link_get(url: str, background_tasks: BackgroundTasks, format:
         # 2. Construct yt-dlp command for streaming to stdout
         # -o - : Output to stdout
         cmd = ["yt-dlp", "--no-part", "--no-colors"]
+
+        # Anti-bot: pass cookies from browser
+        browser_name = get_best_browser_for_cmd()
+        if browser_name:
+            cmd.extend(["--cookies-from-browser", browser_name])
+        
+        # Anti-bot: realistic user agent
+        cmd.extend([
+            "--user-agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "--extractor-retries", "5",
+            "--sleep-interval", "1",
+        ])
         
         if ffmpeg_exe:
              cmd.extend(["--ffmpeg-location", ffmpeg_exe])
@@ -414,12 +485,19 @@ async def download_video(request: DownloadRequest):
                 use_ytdlp_fallback = True
 
         if not is_youtube_url(url_str) or use_ytdlp_fallback:
-            # --- FACEBOOK/OTHER DOWNLOAD (YT-DLP) ---
+            # --- FACEBOOK/OTHER/YOUTUBE FALLBACK DOWNLOAD (YT-DLP) ---
             has_ffmpeg = ffmpeg_exe is not None
             ydl_opts = {
                 'outtmpl': str(DOWNLOADS_DIR / f'{download_id}.%(ext)s'),
                 'quiet': False,
-                'ffmpeg_location': ffmpeg_exe if ffmpeg_exe else None
+                'ffmpeg_location': ffmpeg_exe if ffmpeg_exe else None,
+                # Anti-bot options
+                'cookiesfrombrowser': get_browser_cookies(),
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+                },
+                'extractor_retries': 5,
+                'sleep_interval_requests': 1,
             }
             
             # Simple configuration for robustness
