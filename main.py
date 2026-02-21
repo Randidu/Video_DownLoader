@@ -243,20 +243,25 @@ async def get_sitemap():
 async def get_video_info(video: VideoURL):
     url_str = str(video.url)
     
-    # helper for yt-dlp info
     def get_info_ytdlp():
-        ydl_opts = {
+        base_opts = {
             'quiet': True,
             'no_warnings': True,
             'extract_flat': False,
             'format': None,  # Skips format selection to prevent "Requested format is not available" error
-            **get_cookie_kwargs(),
             'nocheckcertificate': True,
             'ignoreerrors': False,
             'socket_timeout': 30,
         }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            return ydl.extract_info(url_str, download=False)
+        cookie_opts = get_cookie_kwargs()
+        
+        try:
+            with yt_dlp.YoutubeDL({**base_opts, **cookie_opts}) as ydl:
+                return ydl.extract_info(url_str, download=False)
+        except Exception as e:
+            logger.warning(f"yt-dlp info failed with cookies: {e}. Retrying anonymously.")
+            with yt_dlp.YoutubeDL(base_opts) as ydl:
+                return ydl.extract_info(url_str, download=False)
 
     try:
         # Use yt-dlp for everything (more robust against bot detection for info fetching)
@@ -304,21 +309,26 @@ async def download_link_get(url: str, background_tasks: BackgroundTasks, format:
 
         # 1. Get Metadata (Title/Filename/Size) quickly
         def get_meta():
-            ydl_opts = {
+            base_opts = {
                 'quiet': True, 
                 'no_warnings': True,
-                **get_cookie_kwargs(),
+                'nocheckcertificate': True,
             }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url_str, download=False)
-                filename = ydl.prepare_filename(info)
-                # Try to get filesize
-                size = info.get('filesize') or info.get('filesize_approx')
-                return filename, size
+            cookie_opts = get_cookie_kwargs()
+            try:
+                with yt_dlp.YoutubeDL({**base_opts, **cookie_opts}) as ydl:
+                    info = ydl.extract_info(url_str, download=False)
+                    return ydl.prepare_filename(info), (info.get('filesize') or info.get('filesize_approx')), True
+            except Exception as e:
+                logger.warning(f"get_meta failed with cookies: {e}. Retrying without.")
+                with yt_dlp.YoutubeDL(base_opts) as ydl:
+                    info = ydl.extract_info(url_str, download=False)
+                    return ydl.prepare_filename(info), (info.get('filesize') or info.get('filesize_approx')), False
         
         filesize = None
+        use_cookies = True
         try:
-            suggested_filename, filesize = await asyncio.get_event_loop().run_in_executor(executor, get_meta)
+            suggested_filename, filesize, use_cookies = await asyncio.get_event_loop().run_in_executor(executor, get_meta)
             filename = os.path.basename(suggested_filename)
         except:
              filename = f"video_{uuid.uuid4()}.mp4"
@@ -345,13 +355,14 @@ async def download_link_get(url: str, background_tasks: BackgroundTasks, format:
             logger.warning("Deno JS runtime not found. YouTube may fail. Install from https://deno.land")
 
         # Anti-bot: pass cookies
-        cookie_file = BASE_DIR / "cookies.txt"
-        if cookie_file.exists():
-             cmd.extend(["--cookies", str(cookie_file)])
-        else:
-            browser_name = get_best_browser_for_cmd()
-            if browser_name:
-                cmd.extend(["--cookies-from-browser", f"{browser_name}"])
+        if use_cookies:
+            cookie_file = BASE_DIR / "cookies.txt"
+            if cookie_file.exists():
+                 cmd.extend(["--cookies", str(cookie_file)])
+            else:
+                browser_name = get_best_browser_for_cmd()
+                if browser_name:
+                    cmd.extend(["--cookies-from-browser", f"{browser_name}"])
         
         cmd.extend([
             "--socket-timeout", "30",
@@ -554,30 +565,35 @@ async def download_video(request: DownloadRequest):
         if not is_youtube_url(url_str) or use_ytdlp_fallback:
             # --- FACEBOOK/OTHER/YOUTUBE FALLBACK DOWNLOAD (YT-DLP) ---
             has_ffmpeg = ffmpeg_exe is not None
-            ydl_opts = {
+            base_opts = {
                 'outtmpl': str(DOWNLOADS_DIR / f'{download_id}.%(ext)s'),
                 'quiet': False,
                 'ffmpeg_location': ffmpeg_exe if ffmpeg_exe else None,
-                # Anti-bot options
-                **get_cookie_kwargs(),
                 'nocheckcertificate': True,
                 'socket_timeout': 30,
             }
+            cookie_opts = get_cookie_kwargs()
             
             # Simple configuration for robustness
             if request.format == "mp3":
                 if has_ffmpeg:
-                    ydl_opts['format'] = 'bestaudio/best'
-                    ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3'}]
+                    base_opts['format'] = 'bestaudio/best'
+                    base_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3'}]
                 else:
-                    ydl_opts['format'] = 'bestaudio/best' # Will likely download m4a/webm
+                    base_opts['format'] = 'bestaudio/best' # Will likely download m4a/webm
             else:
-                 ydl_opts['format'] = 'best' # Let yt-dlp decide best single file for generic sites
+                 base_opts['format'] = 'best' # Let yt-dlp decide best single file for generic sites
 
             def download_ytdlp():
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url_str, download=True)
-                    return ydl.prepare_filename(info)
+                try:
+                    with yt_dlp.YoutubeDL({**base_opts, **cookie_opts}) as ydl:
+                        info = ydl.extract_info(url_str, download=True)
+                        return ydl.prepare_filename(info)
+                except Exception as e:
+                    logger.warning(f"Download failed with cookies: {e}. Retrying without cookies.")
+                    with yt_dlp.YoutubeDL(base_opts) as ydl:
+                        info = ydl.extract_info(url_str, download=True)
+                        return ydl.prepare_filename(info)
 
             # Run download
             initial_filepath = await asyncio.get_event_loop().run_in_executor(executor, download_ytdlp)
