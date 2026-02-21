@@ -250,6 +250,7 @@ async def get_video_info(video: VideoURL):
             'quiet': True,
             'no_warnings': True,
             'extract_flat': False,
+            'format': None,  # Skips format selection to prevent "Requested format is not available" error
             **get_cookie_kwargs(),
             'nocheckcertificate': True,
             'ignoreerrors': False,
