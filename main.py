@@ -148,9 +148,9 @@ def get_cookie_kwargs():
             logger.info(f"Using cookies from browser: {browser}")
             opts['cookiesfrombrowser'] = (browser,)
 
-    # Use a wider range of clients to ensure all formats are available
-    # tv/mweb are good for bypassing, web/ios provide more formats
-    opts['extractor_args'] = {'youtube': {'player_client': ['tv', 'mweb', 'web', 'ios']}}
+    # Keep default clients (web/android) to avoid DRM issues that happen with 'tv'
+    # Default is the most stable option right now.
+    # opts['extractor_args'] = {'youtube': {'player_client': ['default']}} # implicit
 
     # Add deno JS runtime if available (essential for signature decryption)
     deno_path = get_deno_path()
@@ -356,9 +356,7 @@ async def download_link_get(url: str, background_tasks: BackgroundTasks, format:
         
         cmd.extend([
             "--socket-timeout", "30",
-            "--geo-bypass",
-            # Fix for SABR streaming 403 issue - use multiple clients for best format availability
-            "--extractor-args", "youtube:player_client=tv,mweb,web,ios"
+            "--geo-bypass"
         ])
         
         if ffmpeg_exe:
