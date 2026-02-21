@@ -153,11 +153,10 @@ def get_cookie_kwargs():
     # opts['extractor_args'] = {'youtube': {'player_client': ['default']}} # implicit
 
     # Add deno JS runtime if available (essential for signature decryption)
-    deno_path = get_deno_path()
-    if deno_path:
-        opts['js_runtimes'] = [f'deno:{deno_path}']
-        logger.info(f"Using deno JS runtime for decryption: {deno_path}")
-
+    # Removing from Python API opts to prevent 'Invalid js_runtimes format' dictionary error.
+    # The subprocess CLI command for downloading still passes Deno correctly.
+    # def get_deno_path is still used for the CLI command.
+    
     return opts
 
 def get_browser_cookies():
