@@ -16,7 +16,7 @@ const faqs: FAQItem[] = [
     },
     {
         question: "Which platforms can I download videos from?",
-        answer: "InfinityGrab supports YouTube, Facebook, Instagram, TikTok, Twitter/X, Vimeo, and hundreds of other platforms worldwide."
+        answer: "InfinityGrab supports YouTube, Facebook, Instagram, TikTok, Twitter/X, Vimeo, Pornhub, XVideos, xHamster, XNXX, OnlyFans, and hundreds of other platforms worldwide."
     },
     {
         question: "Is InfinityGrab free to use?",

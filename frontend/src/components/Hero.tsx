@@ -85,6 +85,22 @@ const Hero: React.FC<HeroProps> = ({ onFetch, isLoading, error }) => {
                     <div className="platform-icon" style={{ color: '#1AB7EA' }} title="Vimeo">
                         <i className="bi bi-vimeo"></i>
                     </div>
+                    {/* Adult Sites */}
+                    <div className="platform-icon" style={{ color: '#FF9900' }} title="Pornhub">
+                        <span style={{ fontSize: '1.2rem', fontWeight: 900, fontFamily: 'Arial, sans-serif', letterSpacing: '-1px' }}>PH</span>
+                    </div>
+                    <div className="platform-icon" style={{ color: '#E52B50' }} title="XVideos">
+                        <span style={{ fontSize: '1.2rem', fontWeight: 900, fontFamily: 'Arial, sans-serif', letterSpacing: '-1px' }}>XV</span>
+                    </div>
+                    <div className="platform-icon" style={{ color: '#E52B50' }} title="xHamster">
+                        <span style={{ fontSize: '1.1rem', fontWeight: 900, fontFamily: 'Arial, sans-serif' }}>xH</span>
+                    </div>
+                    <div className="platform-icon" style={{ color: '#0055A4' }} title="XNXX">
+                        <span style={{ fontSize: '0.9rem', fontWeight: 900, fontFamily: 'Arial, sans-serif' }}>XNXX</span>
+                    </div>
+                    <div className="platform-icon" style={{ color: '#00AFF0' }} title="OnlyFans">
+                        <span style={{ fontSize: '1.2rem', fontWeight: 900, fontFamily: 'Arial, sans-serif', letterSpacing: '-1px' }}>OF</span>
+                    </div>
                 </div>
             </div>
         </section>

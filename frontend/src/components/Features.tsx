@@ -24,7 +24,7 @@ const Features: React.FC = () => {
                                 <i className="bi bi-grid-3x3-gap-fill"></i>
                             </div>
                             <h4>Multi-Platform</h4>
-                            <p>Support for YouTube, Facebook, Instagram, TikTok, Twitter, Vimeo and many more platforms.</p>
+                            <p>Support for YouTube, Facebook, Instagram, TikTok, Twitter, Vimeo, Pornhub, XVideos, xHamster, XNXX, OnlyFans and many more platforms.</p>
                         </div>
                     </div>
 

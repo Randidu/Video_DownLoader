@@ -1,0 +1,17 @@
+
+> frontend@0.0.0 dev
+> vite
+
+You are using Node.js 20.11.1. Vite requires Node.js version 20.19+ or 22.12+. Please upgrade your Node.js version.
+error when starting dev server:
+TypeError: crypto.hash is not a function
+    at getHash (file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:2444:19)
+    at getLockfileHash (file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:32383:9)
+    at getDepHash (file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:32386:23)
+    at initDepsOptimizerMetadata (file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:31845:53)
+    at createDepsOptimizer (file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:34033:17)
+    at new DevEnvironment (file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:34807:109)
+    at Object.defaultCreateClientDevEnvironment [as createEnvironment] (file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:35219:9)
+    at file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:25390:52
+    at Array.map (<anonymous>)
+    at _createServer (file:///C:/Users/randi/OneDrive/Desktop/vd/frontend/node_modules/vite/dist/node/chunks/config.js:25389:58)
