@@ -1,93 +1,125 @@
-# 🎥 YouTube & Social Media Video Downloader
+# 🚀 InfinityGrab — Video Downloader
 
-A modern, fast, and reliable web application to download videos from YouTube, Facebook, Instagram, TikTok, and more. Built with **FastAPI** (Python) and **Vanilla JS**.
-
-![Banner](https://img.shields.io/badge/Status-Production%20Ready-success)
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green)
+Download videos from YouTube, Facebook, TikTok, Instagram, and 1000+ sites.
 
 ---
 
-## 🚀 Quick Start (For Developers)
+## 📁 Project Structure
 
-We have included automated scripts to get you up and running in seconds on Windows.
-
-### 1. Setup
-Run **`setup_project.bat`**.
-*   Checks for Python.
-*   Creates a virtual environment (`venv`).
-*   Installs all dependencies.
-
-### 2. Run
-Run **`run_project.bat`**.
-*   Activates the virtual environment.
-*   Starts the backend server.
-*   Opens the web interface in your browser automatically.
-
----
-
-## 📦 Distribution & Deployment
-
-### Create Portable App (.exe)
-To create a standalone `.exe` file that runs on any Windows PC without needing Python installed:
-1.  Run **`build_app.bat`**.
-2.  Find the result in the `dist/Video Downloader` folder.
-3.  Zip this folder and share it!
-
-### Deploy to Cloud (Render/Heroku)
-This project is cloud-ready.
-*   **Source Code**: valid `Procfile`, `render.yaml`, and `requirements.txt` included.
-*   **Server Logic**: Handles temp files and cleanup automatically when running on a server.
-*   **Guide**: See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step instructions.
-
----
-
-## 🛠 Manual Setup (Mac/Linux/Terminal)
-
-If you prefer using the terminal or are on a non-Windows OS:
-
-1.  **Clone the repo**:
-    ```bash
-    git clone <your-repo-url>
-    cd video-downloader
-    ```
-
-2.  **Create venv**:
-    ```bash
-    python -m venv venv
-    # Windows
-    venv\Scripts\activate
-    # Mac/Linux
-    source venv/bin/activate
-    ```
-
-3.  **Install dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Run**:
-    ```bash
-    python main.py
-    ```
+```
+Video_DownLoader/
+├── backend/                   ← FastAPI Python backend
+│   ├── main.py                ← API server entry point
+│   ├── requirements.txt       ← Python dependencies
+│   ├── static/                ← Served by FastAPI (built frontend + media)
+│   │   ├── index.html
+│   │   ├── logo.png
+│   │   ├── favicon.ico
+│   │   ├── manifest.json
+│   │   ├── robots.txt
+│   │   ├── sitemap.xml
+│   │   └── assets/            ← Vite build output (JS/CSS bundles)
+│   └── cookies.txt            ← (optional) YouTube auth cookies
+│
+├── frontend/                  ← React + Vite + TypeScript frontend
+│   ├── src/
+│   │   ├── components/        ← Reusable UI components
+│   │   ├── pages/             ← Route pages
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   ├── index.css
+│   │   └── Types.ts
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.ts         ← Builds output → backend/static
+│
+├── start_backend.bat          ← Run FastAPI backend only
+├── start_frontend.bat         ← Run Vite dev server only
+├── start_app.bat              ← Build frontend + run full app
+└── README.md
+```
 
 ---
 
-## 🏗 Project Structure
+## 🛠️ Setup & Running
 
-*   `main.py`: The FastAPI backend server.
-*   `index.html`: The frontend user interface.
-*   `setup_project.bat`: One-click setup script.
-*   `build_app.bat`: Script to compile to .exe.
-*   `DEPLOYMENT.md`: Cloud hosting guide.
-*   `TROUBLESHOOTING.md`: Common error fixes.
+### 1. Install Backend Dependencies
+```bash
+cd backend
+pip install -r requirements.txt
+```
 
-## ⚠️ Requirements
+### 2. Install Frontend Dependencies
+```bash
+cd frontend
+npm install
+```
 
-*   **Python 3.8+**
-*   **FFmpeg**: Only required for high-quality (1080p+) merges locally. Included automatically in the Portable build.
+---
 
-## 📄 License
-MIT License. Free to use and modify.
+## ▶️ Development Mode
 
+Run both servers simultaneously:
 
+**Terminal 1 — Backend:**
+```bash
+cd backend
+python main.py
+# API available at http://localhost:8000
+```
+
+**Terminal 2 — Frontend:**
+```bash
+cd frontend
+npm run dev
+# UI available at http://localhost:5173
+```
+
+> Set `VITE_API_URL=http://localhost:8000` in `frontend/.env` during development.
+
+---
+
+## 🏭 Production / Full App
+
+Build the frontend into `backend/static`, then run the FastAPI server:
+
+```bash
+# Option 1: One-click Windows script
+start_app.bat
+
+# Option 2: Manual
+cd frontend && npm run build
+cd ../backend && python main.py
+# Full app at http://localhost:8000
+```
+
+---
+
+## 🌐 Deployment (Railway / Render)
+
+- Entry point: `backend/main.py`
+- Set env var `YOUTUBE_COOKIES` (base64 encoded cookies.txt) for YouTube auth
+- See `DEPLOYMENT.md` for full deployment guides
+
+---
+
+## 🔑 Environment Variables
+
+| Variable | Description |
+|---|---|
+| `YOUTUBE_COOKIES` | Base64-encoded cookies.txt for YouTube authentication |
+| `VITE_API_URL` | Frontend API base URL (for development only) |
+| `SERVER_ENV` | Set to any value to enable server mode |
+
+---
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Server health check |
+| `POST` | `/video/info` | Fetch video metadata |
+| `GET` | `/video/download_link` | Stream video/audio to browser |
+| `POST` | `/video/download` | Download to server disk |
+| `GET` | `/video/file/{filename}` | Serve a downloaded file |
+| `GET` | `/debug/cookies` | Cookie status (debug) |

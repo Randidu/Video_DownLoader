@@ -1,50 +1,43 @@
-# Python
+# ─── Python ───────────────────────────────────────────
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
+*.pyo
+*.pyd
 .Python
-env/
-venv/
-ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
+dist/
+build/
 *.egg
-
-# Environment
 .env
-.venv
+.venv/
+venv/
+env/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# ─── Backend ──────────────────────────────────────────
+backend/server.log
+backend/cookies.txt
+backend/ffmpeg.exe
+backend/*.spec
 
-# OS
+# ─── Frontend ─────────────────────────────────────────
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# ─── Build Output ─────────────────────────────────────
+# backend/static is the build output — exclude source-only content
+# but NOT the static dir itself (it's used by FastAPI)
+backend/static/assets/
+
+# ─── OS & Editor ──────────────────────────────────────
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
+*.swp
 
-# Downloads
-downloads/*
-!downloads/.gitkeep
-
-# Logs
+# ─── Logs & Temp ──────────────────────────────────────
 *.log
-
-# Large Binaries
-ffmpeg.exe
-ffprobe.exe
+*.tmp
+web_application_source.zip
