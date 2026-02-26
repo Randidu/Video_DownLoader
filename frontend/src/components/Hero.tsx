@@ -29,7 +29,7 @@ const Hero: React.FC<HeroProps> = ({ onFetch, isLoading, error }) => {
                 <p>Download Videos from YouTube, Facebook, Instagram, TikTok & more in HD/4K</p>
 
                 {/* Live Match Section */}
-                <div className="live-match-container mb-5 text-center">
+                {/* <div className="live-match-container mb-5 text-center">
                     {!showLive ? (
                         <button
                             onClick={() => setShowLive(true)}
@@ -74,7 +74,7 @@ const Hero: React.FC<HeroProps> = ({ onFetch, isLoading, error }) => {
                             </div>
                         </div>
                     )}
-                </div>
+                </div> */}
 
                 {/* URL Input */}
                 <div className="url-input-container">
