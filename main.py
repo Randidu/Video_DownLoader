@@ -148,14 +148,9 @@ def get_cookie_kwargs():
             logger.info(f"Using cookies from browser: {browser}")
             opts['cookiesfrombrowser'] = (browser,)
 
-    # Keep default clients (web/android) to avoid DRM issues that happen with 'tv'
-    # Default is the most stable option right now.
-    # opts['extractor_args'] = {'youtube': {'player_client': ['default']}} # implicit
-
-    # Add deno JS runtime if available (essential for signature decryption)
-    # Removing from Python API opts to prevent 'Invalid js_runtimes format' dictionary error.
-    # The subprocess CLI command for downloading still passes Deno correctly.
-    # def get_deno_path is still used for the CLI command.
+    # 2. Add client impersonation arguments specifically for YouTube bot bypass.
+    # Android and MWeb (mobile web) clients bypass bot restrictions much better than the web / tv client default right now.
+    opts['extractor_args'] = {'youtube': {'player_client': ['android,mweb']}}
     
     return opts
 

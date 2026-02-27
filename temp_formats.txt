@@ -1,0 +1,13 @@
+[youtube] Extracting URL: https://youtu.be/48PYc8jdyWc
+[youtube] 48PYc8jdyWc: Downloading webpage
+[youtube] 48PYc8jdyWc: Downloading tv downgraded player API JSON
+[youtube] 48PYc8jdyWc: Downloading web safari player API JSON
+[youtube] 48PYc8jdyWc: Downloading player 00c52fa0-tv
+[youtube] [jsc:deno] Solving JS challenges using deno
+[info] Available formats for 48PYc8jdyWc:
+ID  EXT   RESOLUTION FPS | PROTO | VCODEC MORE INFO
+----------------------------------------------------
+sb3 mhtml 48x27        0 | mhtml | images storyboard
+sb2 mhtml 120x45       0 | mhtml | images storyboard
+sb1 mhtml 240x90       0 | mhtml | images storyboard
+sb0 mhtml 480x180      0 | mhtml | images storyboard
