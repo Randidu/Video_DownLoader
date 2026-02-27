@@ -8,7 +8,6 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ onFetch, isLoading, error }) => {
     const [url, setUrl] = useState('');
-    const [showLive, setShowLive] = useState(false);
 
     const handleFetch = () => {
         if (url.trim()) {
