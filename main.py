@@ -582,7 +582,20 @@ async def download_video(request: DownloadRequest):
                 else:
                     base_opts['format'] = 'bestaudio/best' # Will likely download m4a/webm
             else:
-                 base_opts['format'] = 'best' # Let yt-dlp decide best single file for generic sites
+                 target_res = request.quality
+                 if target_res:
+                     if target_res == "1080p":
+                          base_opts['format'] = "bestvideo[height<=1080]+bestaudio/best"
+                     elif target_res == "720p":
+                          base_opts['format'] = "bestvideo[height<=720]+bestaudio/best"
+                     elif target_res == "480p":
+                          base_opts['format'] = "bestvideo[height<=480]+bestaudio/best"
+                     elif target_res == "360p":
+                          base_opts['format'] = "bestvideo[height<=360]+bestaudio/best"
+                     else:
+                          base_opts['format'] = "best"
+                 else:
+                     base_opts['format'] = 'best' # Let yt-dlp decide best single file for generic sites
 
             def download_ytdlp():
                 try:
