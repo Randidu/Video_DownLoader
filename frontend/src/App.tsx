@@ -71,14 +71,42 @@ function HomePage() {
     }
   };
 
-  const handleDownload = (url: string, format: string, quality?: string) => {
+  const handleDownload = async (url: string, format: string, quality?: string) => {
     setIsDownloading(true);
-    const params = new URLSearchParams({ url, format });
-    let actualQuality = quality;
-    if (actualQuality === 'audio') actualQuality = '';
-    if (actualQuality) params.append('quality', actualQuality);
-    window.location.href = `${API_URL}/video/download_link?${params.toString()}`;
-    setTimeout(() => setIsDownloading(false), 5000);
+    setError(null);
+    try {
+      let actualQuality = quality;
+      if (actualQuality === 'audio') actualQuality = '';
+
+      const payload = { url, format, quality: actualQuality || undefined };
+
+      const response = await fetch(`${API_URL}/video/download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        try {
+          const jsonError = JSON.parse(text);
+          throw new Error(jsonError.detail || 'Failed to download video');
+        } catch {
+          throw new Error(text || 'Failed to download video');
+        }
+      }
+
+      const data = await response.json();
+      if (data.success && data.data && data.data.filename) {
+        window.location.href = `${API_URL}/video/file/${data.data.filename}`;
+      } else {
+        throw new Error('Invalid download response from server');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while downloading');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
