@@ -10,6 +10,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AboutUs from './pages/AboutUs';
 import Contact from './pages/Contact';
+import { useSEO } from './hooks/useSEO';
 import type { VideoInfo } from './Types';
 import './index.css';
 
@@ -22,6 +23,13 @@ function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  useSEO({
+    title: "InfinityGrab - Best Free YouTube & Video Downloader | MP4, MP3, 4K, HD",
+    description: "Download YouTube videos in MP4, MP3, 1080p, 4K for FREE with InfinityGrab. Supports YouTube, Facebook, Instagram, TikTok, Twitter, Vimeo. No registration, no ads, unlimited downloads. Fast & safe.",
+    keywords: "YouTube Downloader, Free YouTube Downloader, YouTube to MP4, YouTube to MP3, Video Downloader, Download YouTube Videos, 4K Video Downloader, 1080p Downloader, Facebook Video Downloader, Instagram Downloader, TikTok Downloader, Twitter Video Download, Online Video Downloader, MP4 Downloader, MP3 Converter, InfinityGrab, HD Video Download, Best Video Downloader 2026",
+    canonical: "https://infinitygrab.xyz/"
+  });
 
   const handleFetch = async (url: string) => {
     setIsLoading(true);

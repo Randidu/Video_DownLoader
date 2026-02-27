@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
+import { useSEO } from '../hooks/useSEO';
 
 const Contact: React.FC = () => {
+    useSEO({
+        title: "Contact Us - InfinityGrab",
+        description: "Have questions or need help with InfinityGrab video downloader? Contact our support team for any inquiries or bug reports.",
+        canonical: "https://infinitygrab.xyz/contact"
+    });
+
     const [form, setForm] = useState({ name: '', email: '', message: '' });
     const [submitted, setSubmitted] = useState(false);
 
